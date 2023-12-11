@@ -1,13 +1,24 @@
-import { useState } from 'react'
+import { useState, useReducer } from 'react'
 import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
 import List from './components/List'
 import Modal from './components/Modal'
-import { Todo } from './types'
+import { Todo, TodoState, TodoAction } from './types'
 
 const ModalPortal = ({ children }: { children: React.ReactNode }) => {
   const target = document.querySelector(".modal")
   return target ? createPortal(children, target) : null
+}
+
+const todoReducer = (state: TodoState, action: TodoAction) => {
+  switch (action.type) {
+    case "add":
+      return [...state, action.payload]
+    case "delete":
+      return state.filter((todo: Todo) => todo.id !== action.payload)
+    default:
+      return state
+  }
 }
 
 const ContainerDiv = styled.div`
@@ -43,11 +54,11 @@ const Ul = styled.ul`
 `
 
 const App = () => {
-  const [todos, setTodos] = useState<Todo[]>([])
+  const [todos, dispatch] = useReducer(todoReducer, [])
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const addTodo = (todo: Todo) => {
-    setTodos([...todos, todo])
+    dispatch({ type: "add", payload: todo })
     setIsModalOpen(false)
   }
 
@@ -56,7 +67,7 @@ const App = () => {
   }
 
   const handleDeleteTodo = (todo: Todo) => {
-    setTodos(todos.filter((_todo) => _todo.id !== todo.id))
+    dispatch({ type: "delete", payload: todo.id })
   }
 
   return (
